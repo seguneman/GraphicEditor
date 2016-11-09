@@ -1,4 +1,5 @@
 package frames;
+import java.awt.Cursor;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.MouseEvent;
@@ -6,23 +7,26 @@ import java.awt.event.MouseMotionListener;
 import java.util.Vector;
 
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 import javax.swing.event.MouseInputListener;
 
-import constants.GConstants.EDrawingType;
 import shapes.GShape;
 
 public class GDrawingPanel extends JPanel {
 	// attributes
 	private static final long serialVersionUID = 1L;
 	// object states
-	private enum EState {idle, drawing};
+	private enum EState {idleTP, idleNP, drawingTP, drawingNP};
+	private EState eState = EState.idleTP;
 	// components
 	private Vector<GShape> shapeVector;	
 	// associative attributes
 	private GShape selectedShape;
 	public void setSelectedShape(GShape selectedShape) {
 		this.selectedShape = selectedShape;
+		switch (this.selectedShape.geteDrawingType()) {
+			case TP: eState = EState.idleTP; break;
+			case NP: eState = EState.idleNP; break;
+		}
 	}	
 	// working objects;
 	private GShape currentShape;
@@ -65,85 +69,76 @@ public class GDrawingPanel extends JPanel {
 		this.currentShape.finishDrawing(x, y, g2D);
 		this.shapeVector.add(this.currentShape);
 	}
-	
+	private void cursorShape(int x, int y) {
+		for (GShape shape: this.shapeVector) {
+			if (shape.contains(x, y)) {
+				Cursor shapeCursor = Cursor.getDefaultCursor();			
+				shapeCursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR); 
+			    setCursor(shapeCursor);
+			} else {
+				Cursor shapeCursor = Cursor.getDefaultCursor();			    
+				shapeCursor = Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR); 
+			    setCursor(shapeCursor);
+			}
+		}
+	}
 	class MouseEventHandler 
 		implements MouseInputListener, MouseMotionListener {
-		private EState eState = EState.idle;
 		@Override
 		public void mouseClicked(MouseEvent e) {
 			if (e.getClickCount() == 1) {
 				mouse1Clicked(e);
-			} 
+			} else if (e.getClickCount() == 2) {
+				mouse2Clicked(e);
+			}
  		}
 		private void mouse1Clicked(MouseEvent e) {
-			if (eState == EState.idle) {
-				if (selectedShape.geteDrawingType() == EDrawingType.NP) {
-					initDrawing(e.getX(), e.getY());
-					eState = EState.drawing;
-					System.out.println("mouse1Clicked/idle");
-				}
-			} else if (eState == EState.drawing) {	
+			if (eState == EState.idleNP) {
+				initDrawing(e.getX(), e.getY());
+				eState = EState.drawingNP;
+			} else if (eState == EState.drawingNP) {	
 				continueDrawing(e.getX(), e.getY());			
-				System.out.println("mouse1Clicked/drawing");
 			}
-			if(SwingUtilities.isRightMouseButton(e)){
-				 
-				System.out.println("Right Clicked poly!!");
-
-				finishDrawing(e.getX(), e.getY());
-				 eState = EState.idle;
-	            System.out.println("finish poly");
-	           
-	        }
 		}
-		/*private void mouse2Clicked(MouseEvent e) {
-			if (eState == EState.drawing) {		
+		private void mouse2Clicked(MouseEvent e) {
+			if (eState == EState.drawingNP) {		
 				finishDrawing(e.getX(), e.getY());
-				eState = EState.idle;
-				System.out.println("mouse2Clicked/drawing");
+				eState = EState.idleNP;
 			}			
-		}*/
+		}
 		@Override
 		public void mousePressed(MouseEvent e) {
-			if(selectedShape.geteDrawingType() == EDrawingType.TP ){
-					if (eState == EState.idle) {
-					initDrawing(e.getX(), e.getY());
-					eState = EState.drawing;
-					System.out.println("mousePressed/idle");
-				}
-			}
+			if (eState == EState.idleTP) {
+				initDrawing(e.getX(), e.getY());
+				eState = EState.drawingTP;
+			}		
 		}
 		@Override
 		public void mouseReleased(MouseEvent e) {
-			if(selectedShape.geteDrawingType() == EDrawingType.TP ){
-				if (eState == EState.drawing) {		
-					finishDrawing(e.getX(), e.getY());
-					eState = EState.idle;
-					System.out.println("mouseReleased/drawing");
-				}
+			if (eState == EState.drawingTP) {		
+				finishDrawing(e.getX(), e.getY());
+				eState = EState.idleTP;
 			}
 		}
 		@Override
 		public void mouseMoved(MouseEvent e) {
-			if (eState == EState.drawing) {
+			if (eState == EState.drawingNP) {
 				keepDrawing(e.getX(), e.getY());
-				System.out.println("mouseMoved/drawing");
+			} else if (eState == EState.idleTP || eState == EState.idleNP) {
+				cursorShape(e.getX(), e.getY());
 			}
 		}		
 		@Override
 		public void mouseDragged(MouseEvent e) {
-			if(selectedShape.geteDrawingType() == EDrawingType.TP ){
-				if (eState == EState.drawing) {
-					keepDrawing(e.getX(), e.getY());
-					System.out.println("mouseDragged/drawing");
-				}
+			if (eState == EState.drawingTP) {
+				keepDrawing(e.getX(), e.getY());
 			}
 		}
 		@Override
-		public void mouseEntered(MouseEvent arg0) {
+		public void mouseEntered(MouseEvent e) {
 		}
 		@Override
-		public void mouseExited(MouseEvent arg0) {
+		public void mouseExited(MouseEvent e) {
 		}
 	}
 
