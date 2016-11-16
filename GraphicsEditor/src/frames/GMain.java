@@ -5,6 +5,6 @@ public class GMain {
 		// object name & body created & bound
 		GMainFrame mainFrame = new GMainFrame();
 		mainFrame.initialize();
-		mainFrame.setVisible(true);
+		mainFrame.setVisible(true);	
 	}
 }
