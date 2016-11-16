@@ -2,10 +2,14 @@ package frames;
 import java.awt.Cursor;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.Point;
+import java.awt.Toolkit;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.util.Vector;
 
+import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 import javax.swing.event.MouseInputListener;
 
@@ -84,6 +88,10 @@ public class GDrawingPanel extends JPanel {
 	private void changeCursor(int x, int y){
 		for(GShape shape: this.shapeVector){
 			EAnchors eAnchors = shape.contains(x, y);
+			Toolkit toolkit = Toolkit.getDefaultToolkit();
+			Image rotationCursor = toolkit.getImage("rsc/rotationicon.png");
+			
+			//Cursor customCursor = toolkit.createCustomCursor(rotationCursor,hotSpot , "Rotation");
 			if(eAnchors != null) {
 				switch (eAnchors) {
 				case NN:
@@ -111,7 +119,8 @@ public class GDrawingPanel extends JPanel {
 					this.setCursor(new Cursor(Cursor.W_RESIZE_CURSOR));
 					return;
 				case RR:
-					this.setCursor(new Cursor(Cursor.HAND_CURSOR));
+					this.setCursor(Toolkit.getDefaultToolkit().createCustomCursor
+							(new ImageIcon("rsc/rotationicon.png").getImage(),new Point(0,0),"custom cursor"));
 					return;
 				case MM:
 					this.setCursor(new Cursor(Cursor.MOVE_CURSOR));
